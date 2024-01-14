@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/3.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
-
+from decouple import config 
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -25,12 +25,16 @@ SECRET_KEY = 'ddcqdy4-*#+t#wg5#-)ps_mrxcqzyf#-12eb*+@t_ppxvyhuu_'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+DEBUG = config('DEBUG', default=False, cast=bool)
+OPENAI_SECRET_KEY = config('OPENAI_SECRET_KEY')
+
 ALLOWED_HOSTS = []
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'ai',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,7 +58,7 @@ ROOT_URLCONF = 'urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'ai', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

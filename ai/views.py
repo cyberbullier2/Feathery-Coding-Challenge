@@ -24,13 +24,13 @@ def upload_pdf(request):
             try:
                 # Convert PDF to images
                 image_paths = convert_pdf_to_images(request.FILES['pdf_file'])
-                            # Check if images were successfully created
+                # Check if images were successfully created
+                # defensive check for empty pdf
+                if not image_paths:
+                    return HttpResponse("Cannot upload empty pdf")
             except Exception as e:
                 return HttpResponse("Failed to convert PDF to images.")
 
-            # defensive check for empty pdf
-            if not image_paths:
-                return HttpResponse("Cannot upload empty pdf")
 
             # Encode images and prepare for API call
             messages=[
@@ -61,7 +61,7 @@ def upload_pdf(request):
             response = client1.chat.completions.create(
                 model="gpt-4-vision-preview",
                 messages=messages,
-                max_tokens=4096
+                max_tokens=1024
             )
 
             content_text = response.choices[0].message.content
@@ -71,7 +71,7 @@ def upload_pdf(request):
                 response_model=PortfolioSummary,
                 messages=[{"role": "user", "content": "Extract account owner name, portfolio value, and the name and cost basis of each holding from the following portfolio summary description text. If missing value or unable to parse the value, make field value equal 'None' type:" + content_text}
                 ],
-                max_tokens=4096
+                max_tokens=500
             )
             print(f"model 2 output:{temp}")
 
@@ -100,7 +100,13 @@ def encode_image_to_base64(image_path):
         return None
 
 def convert_pdf_to_images(pdf_file):
-    output_folder = 'path_to_output_folder'
+    output_folder = os.path.join(settings.BASE_DIR, 'pdf_images')
+
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Save the uploaded PDF file temporarily
+    pdf_path = os.path.join(output_folder, pdf_file.name)
     image_paths = []
     try:
         # Save the uploaded PDF file temporarily

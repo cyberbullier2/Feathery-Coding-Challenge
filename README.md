@@ -22,3 +22,23 @@
    - set ```response_model``` parameter with a custom data type in order to extracted structured data from the by default unstructered model response
    - ```max_tokens``` set to 300. Expecting a shorter response than the previous ```GPT4-vision-preview``` model request.
 6. Data client wanted to know about initial PDF is now in strctured format. Render success view showing the structured data.
+
+## Design Process
+
+1. How did you choose your prompts? 
+2. How did you approach testing? 
+3. Did you make any decisions on engineering tradeoffs?
+
+##Limitations
+
+1. Asset storage done locally on disk
+2. Model inaccuracies
+3. Model performance
+4. Does my service scale?
+
+## Areas to improve
+
+1. Store assets in blobstore(S3) > local disk
+2. Break prompts into chunks such that models can asychronously process the chunked prompts,independently
+3. If high load, talk about how to leverage a load balancer and multiple application servers to distribute client volume
+

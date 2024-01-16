@@ -9,6 +9,7 @@ from openai import OpenAI
 from .utils import PortfolioSummary
 import fitz  # PyMuPDF
 from decouple import config
+import time
 
 # Create your views here.
 
@@ -47,44 +48,44 @@ def upload_pdf(request):
             for image_path in image_paths:
                 base64_image = encode_image_to_base64(image_path)
                 if base64_image:
-                    messages[0]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
+                    messages[0]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}", "detail":"low"}})
                     continue
                 else:
                     return HttpResponse("Failed to encode one or more images.")
 
-            # Make API call
 
 
 
             client1 = OpenAI(api_key=config('OPENAI_API_KEY'))
+            print("Invoke model 1 ....")
+            start_time = time.time()
             client2 = instructor.patch(OpenAI(api_key=config('OPENAI_API_KEY')))
             response = client1.chat.completions.create(
                 model="gpt-4-vision-preview",
                 messages=messages,
-                max_tokens=1024
+                max_tokens=1000
             )
 
             content_text = response.choices[0].message.content
             print(f"model 1 output:{content_text}")
+
+            duration = time.time() - start_time
+            print(f"Model 1 API call took {duration:.2f} seconds.")
+            
+            print("Invoke model 2 ....")
+            start_time = time.time()
             temp = client2.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4-1106-preview",
                 response_model=PortfolioSummary,
-                messages=[{"role": "user", "content": "Extract account owner name, portfolio value, and the name and cost basis of each holding from the following portfolio summary description text. If missing value or unable to parse the value, make field value equal 'None' type:" + content_text}
+                messages=[{"role": "user", "content": "Extract account owner name, portfolio value, and the name and cost basis of each holding from the following portfolio summary description text. If missing value or unable to parse the value, make str fields value equal '' ans float field types equal 0:" + content_text}
                 ],
-                max_tokens=500
+                max_tokens=400
             )
+            
             print(f"model 2 output:{temp}")
 
-
-
-
-
-            # Process the response as needed
-            # ...
-
-            # Render a response page or redirect as necessary
-            # ...
-        # print(response)
+            duration = time.time() - start_time
+            print(f"Model 2 API call took {duration:.2f} seconds.")
         return render(request, 'ai/upload_pdf_success.html',{"portfolio_summary": temp})
     else:
         form = PDFUploadForm()
@@ -92,6 +93,7 @@ def upload_pdf(request):
     return render(request, 'ai/upload_pdf.html', {'form': form})
 
 def encode_image_to_base64(image_path):
+    print("encoding pdf images to base 64")
     try:
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')
@@ -100,6 +102,7 @@ def encode_image_to_base64(image_path):
         return None
 
 def convert_pdf_to_images(pdf_file):
+    print("Converting PDF to images")
     output_folder = os.path.join(settings.BASE_DIR, 'pdf_images')
 
     if not os.path.exists(output_folder):

@@ -43,9 +43,13 @@
         <h2>Upload PDF File</h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
+            <p>
+                <label for="id_pdf_file">Upload PDF:</label>
+                <input type="file" name="pdf_file" accept="application/pdf" id="id_pdf_file" required>
+            </p>
             <button type="submit">Upload</button>
         </form>
+
     </div>
 </body>
 </html>
